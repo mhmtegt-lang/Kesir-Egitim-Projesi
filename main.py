@@ -1,84 +1,64 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import pandas as pd
 
-# Sayfa Yapılandırması - Mimari temizlik için
-st.set_page_config(page_title="Kesir Eğitimi - CRA Modeli", layout="centered")
+# Sayfa Yapılandırması
+st.set_page_config(page_title="Kesir Eğitimi", layout="centered")
 
 st.title("🍎 Kesirleri Sıralama Eğitimi")
-st.markdown("### 5. Sınıf Müfredatına Uygun Somuttan Soyuta Öğrenme")
+st.markdown("### Paydaları Eşit Kesirleri Karşılaştırma")
 
-# --- YAN PANEL (Ayarlar) ---
-st.sidebar.header("⚙️ Ders Ayarları")
-# Payda (Bütünün kaç parçaya bölündüğü)
-payda = st.sidebar.number_input("Bütün Kaç Parçadan Oluşsun? (Payda)", min_value=2, max_value=20, value=8)
+# --- YAN PANEL (Kontrol Merkezi) ---
+st.sidebar.header("⚙️ Ayarlar ve Kontroller")
+payda = st.sidebar.number_input("Payda (Bütünün Parçası)", min_value=2, max_value=20, value=8)
+
+# Pay sürgülerini yan panele aldık, ana ekranı temizledik
+pay1 = st.sidebar.slider("1. Kesrin Payı", 0, payda, 3)
+pay2 = st.sidebar.slider("2. Kesrin Payı", 0, payda, 5)
+
 ogrenci_adi = st.sidebar.text_input("Öğrenci Adı", "Küçük Matematikçi")
 
-# --- 1. AŞAMA: SOMUT ---
-st.header("1. Adım: Somut Deneyim (Lego Modeli)")
-st.info(f"Merhaba {ogrenci_adi}! Elimizde {payda} parçalık bir Lego zemini var.")
+# --- 1. AŞAMA: GÖRSELLEŞTİRME (KESİR ÇUBUKLARI) ---
+st.header("📊 Görsel Karşılaştırma")
+st.write(f"Merhaba **{ogrenci_adi}**, aşağıdaki çubukları boyalı alanlarına göre incele:")
 
-col1, col2 = st.columns(2)
-with col1:
-    pay1 = st.slider("1. Kesrin Payı", 0, payda, 3)
-with col2:
-    pay2 = st.slider("2. Kesrin Payı", 0, payda, 5)
-
-def draw_lego(pay, total, label):
-    st.write(f"**{label} ({pay}/{total})**")
-    full_blocks = "🟩" * pay
-    empty_blocks = "⬜" * (total - pay)
-    st.text(full_blocks + empty_blocks)
-
-draw_lego(pay1, payda, "Senin Kulen")
-draw_lego(pay2, payda, "Arkadaşının Kulesi")
-
-# --- 2. AŞAMA: YARI-SOMUT (GÖRSEL) ---
-st.header("2. Adım: Görselleştirme (Kesir Çubukları)")
-
-# Grafik mimarisini oluştur
+# Grafik mimarisi
 fig, ax = plt.subplots(figsize=(10, 3))
 
-# 1. Kesir (Arka plan + Boyalı kısım)
+# Kesir 1 Çizimi
 ax.barh(1, 1, color='#F0F0F0', edgecolor='black', linewidth=1)
-ax.barh(1, pay1/payda, color='#FF6B6B', label=f"Kesir 1: {pay1}/{payda}")
+ax.barh(1, pay1/payda, color='#FF6B6B', label=f"1. Kesir: {pay1}/{payda}")
 
-# 2. Kesir (Arka plan + Boyalı kısım)
+# Kesir 2 Çizimi
 ax.barh(0, 1, color='#F0F0F0', edgecolor='black', linewidth=1)
-ax.barh(0, pay2/payda, color='#4ECDC4', label=f"Kesir 2: {pay2}/{payda}")
+ax.barh(0, pay2/payda, color='#4ECDC4', label=f"2. Kesir: {pay2}/{payda}")
 
-# Grid ve detaylar - Diskalkuli desteği için bölme çizgileri
+# Izgara çizgileri (Payda kadar bölme)
 for x in [i/payda for i in range(payda + 1)]:
     ax.axvline(x, color='black', linestyle=':', alpha=0.5)
 
-# === DEĞİŞİKLİK BURADA BAŞLIYOR ===
-# 1. X-ekseni sınırlarını bütünün tamamına (0-1 arası) ayarla
+# Görsel Temizlik: Eksenleri ve sayıları kaldır
 ax.set_xlim(0, 1)
-
-# 2. X-ekseni üzerindeki sayısal etiketleri (ticks) tamamen kaldır!
-# Bu satır, alttaki 0.0, 0.2, 0.4 vb. sayıları kaldırır.
-ax.set_xticks([]) 
-# === DEĞİŞİKLİK BURADA BİTİYOR ===
-
-# Y-ekseni etiketleri (Kesir 1 / Kesir 2)
+ax.set_xticks([]) # Alttaki sayıları kaldırdık
 ax.set_yticks([0, 1])
-ax.set_yticklabels(["Kesir 2", "Kesir 1"])
+ax.set_yticklabels(["2. Kesir", "1. Kesir"])
 ax.legend(loc="upper right")
+
 st.pyplot(fig)
 
-# --- 3. AŞAMA: SOYUT ---
-st.header("3. Adım: Soyut Kural (Matematik Sembolü)")
+# --- 2. AŞAMA: SOYUT KURAL ---
+st.header("📝 Matematiksel Sonuç")
 
+# Karşılaştırma Mantığı
 if pay1 > pay2:
     sembol = ">"
-    mesaj = f"Çünkü {pay1} parça, {pay2} parçadan daha fazladır!"
+    durum = "BÜYÜKTÜR"
 elif pay1 < pay2:
     sembol = "<"
-    mesaj = f"Çünkü {pay2} parça, {pay1} parçadan daha fazladır!"
+    durum = "KÜÇÜKTÜR"
 else:
     sembol = "="
-    mesaj = "İki kesir de birbirine eşittir."
+    durum = "EŞİTTİR"
 
-# LaTeX formatında temiz çıktı
-st.success(f"### Sonuç: $\\frac{{{pay1}}}{{{payda}}}$ {sembol} $\\frac{{{pay2}}}{{{payda}}}$")
-st.write(mesaj)
+# Büyük ve net bir sonuç kutusu
+st.success(f"### $\\frac{{{pay1}}}{{{payda}}}$ {sembol} $\\frac{{{pay2}}}{{{payda}}}$")
+st.markdown(f"**Yorum:** Paydalar eşit olduğunda, payı büyük olan ({max(pay1, pay2)}) daha büyüktür.")
