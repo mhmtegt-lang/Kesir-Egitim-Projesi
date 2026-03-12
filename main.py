@@ -1,89 +1,70 @@
+import streamlit as st
 import matplotlib.pyplot as plt
-import numpy as np
-import logging
+import pandas as pd
 
-# 1. HATA YÖNETİMİ: Uygulamanın çökmemesi için günlük tutma sistemi
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+# Sayfa Yapılandırması
+st.set_page_config(page_title="Kesir Eğitimi - CRA Modeli", layout="centered")
 
-class KesirSiralamaSistemi:
-    """
-    5. Sınıf müfredatına uygun, Diskalkuli dostu 
-    Kesir Karşılaştırma ve Sıralama Motoru.
-    """
-    def __init__(self, payda: int):
-        # Güvenlik Kontrolü: Payda 0 veya negatif olamaz
-        if payda <= 0:
-            logging.error("Hatalı Veri: Payda 0'dan büyük olmalıdır.")
-            raise ValueError("Payda (alt sayı) 0'dan büyük bir sayı seçilmelidir.")
-        
-        self.payda = payda
-        # Diskalkuli için yüksek kontrastlı renk paleti
-        self.renkler = ['#E63946', '#457B9D', '#A8DADC', '#F1FAEE']
+st.title("🍎 Kesirleri Sıralama Eğitimi")
+st.markdown("### 5. Sınıf Müfredatına Uygun Somuttan Soyuta Öğrenme")
 
-    def asama_1_somut_deneyim(self, ogrenci_adi: str, pay_degerleri: list):
-        """SOMUT AŞAMA: Fiziksel nesne simülasyonu (ASCII Lego)"""
-        print(f"\n{'='*50}")
-        print(f"🌟 HOŞ GELDİN {ogrenci_adi.upper()}! 🌟")
-        print(f"{'='*50}\n")
-        print(f"ADIM 1: SOMUT DENEYİM (Lego Kuleleri)")
-        print(f"Toplam {self.payda} parçalık bir zeminimiz var.\n")
+# --- YAN PANEL (Ayarlar) ---
+st.sidebar.header("⚙️ Ders Ayarları")
+payda = st.sidebar.number_input("Bütün Kaç Parçadan Oluşsun? (Payda)", min_value=2, max_value=20, value=8)
+ogrenci_adi = st.sidebar.text_input("Öğrenci Adı", "Küçük Matematikçi")
 
-        for i, pay in enumerate(pay_degerleri):
-            kule = "█" * pay + "░" * (self.payda - pay)
-            print(f"{i+1}. Kule ({pay}/{self.payda}): [{kule}]")
-        print("\nSoru: Hangi kule daha çok yer kaplıyor? (Gözle kontrol et!)")
+# --- 1. AŞAMA: SOMUT ---
+st.header("1. Adım: Somut Deneyim (Lego Modeli)")
+st.info(f"Merhaba {ogrenci_adi}! Elimizde {payda} parçalık bir Lego zemini var.")
 
-    def asama_2_gorsellestirme(self, pay_degerleri: list):
-        """YARI-SOMUT AŞAMA: Alan modelleri ve grafikler"""
-        logging.info("Grafik motoru hazırlanıyor...")
-        
-        try:
-            fig, ax = plt.subplots(len(pay_degerleri), 1, figsize=(10, 6))
-            if len(pay_degerleri) == 1: ax = [ax]
+col1, col2 = st.columns(2)
+with col1:
+    pay1 = st.slider("1. Kesrin Payı", 0, payda, 3)
+with col2:
+    pay2 = st.slider("2. Kesrin Payı", 0, payda, 5)
 
-            for i, pay in enumerate(pay_degerleri):
-                # Bütünün tamamını (çerçeve) çiz
-                ax[i].barh(0, 1, color='none', edgecolor='black', linewidth=3)
-                # Alınan parçayı (pay) boya
-                ax[i].barh(0, pay/self.payda, color=self.renkler[i % len(self.renkler)])
-                
-                # Diskalkuli desteği: Bölmeleri tek tek göster (Grid)
-                for j in range(1, self.payda):
-                    ax[i].axvline(j/self.payda, color='black', linestyle='--', alpha=0.3)
-                
-                ax[i].set_xlim(0, 1)
-                ax[i].set_yticks([])
-                ax[i].set_title(f"Kesir: {pay} / {self.payda}", fontweight='bold')
+def draw_lego(pay, total, label):
+    st.write(f"**{label} ({pay}/{total})**")
+    full_blocks = "🟩" * pay
+    empty_blocks = "⬜" * (total - pay)
+    st.text(full_blocks + empty_blocks)
 
-            plt.tight_layout()
-            print("\nADIM 2: GÖRSELLEŞTİRME (Kesir Çubukları)")
-            print("Görsel penceresi açılıyor, lütfen kontrol et...")
-            plt.show()
-        except Exception as e:
-            logging.error(f"Grafik çizilirken bir hata oluştu: {e}")
+draw_lego(pay1, payda, "Senin Kulen")
+draw_lego(pay2, payda, "Arkadaşının Kulesi")
 
-    def asama_3_soyut_kural(self, pay_degerleri: list):
-        """SOYUT AŞAMA: Matematiksel semboller ve kural tanımlama"""
-        print(f"\nADIM 3: SOYUT KURAL (Matematik Dili)")
-        # Payları büyükten küçüğe sırala
-        sirali_paylar = sorted(pay_degerleri, reverse=True)
-        
-        sonuc_metni = " > ". join([f"{p}/{self.payda}" for p in sirali_paylar])
-        
-        print("💡 UNUTMA: Paydalar (alt sayılar) eşitse, üstü (payı) büyük olan kesir daha büyüktür!")
-        print(f"Sıralama Sonucu: {sonuc_metni}")
-        print("\n" + "="*50)
+# --- 2. AŞAMA: YARI-SOMUT (GÖRSEL) ---
+st.header("2. Adım: Görselleştirme (Kesir Çubukları)")
 
-# --- ÇALIŞTIRMA BÖLÜMÜ ---
-if __name__ == "__main__":
-    # Senaryo: Paydası 8 olan bir bütünü karşılaştıralım
-    try:
-        egitim = KesirSiralamaSistemi(payda=8)
-        ogrenci_paylari = [3, 5, 2] # Öğrencinin karşılaştıracağı kesirler
-        
-        egitim.asama_1_somut_deneyim("Küçük Matematikçi", ogrenci_paylari)
-        egitim.asama_2_gorsellestirme(ogrenci_paylari)
-        egitim.asama_3_soyut_kural(ogrenci_paylari)
-        
-    except ValueError as e:
-        print(f"Giriş Hatası: {e}")
+fig, ax = plt.subplots(figsize=(10, 3))
+# 1. Kesir
+ax.barh(1, 1, color='#F0F0F0', edgecolor='black')
+ax.barh(1, pay1/payda, color='#FF6B6B', label=f"Kesir 1: {pay1}/{payda}")
+# 2. Kesir
+ax.barh(0, 1, color='#F0F0F0', edgecolor='black')
+ax.barh(0, pay2/payda, color='#4ECDC4', label=f"Kesir 2: {pay2}/{payda}")
+
+# Grid ve detaylar
+for x in [i/payda for i in range(payda + 1)]:
+    ax.axvline(x, color='black', linestyle=':', alpha=0.5)
+
+ax.set_xlim(0, 1)
+ax.set_yticks([0, 1])
+ax.set_yticklabels(["Kesir 2", "Kesir 1"])
+ax.legend()
+st.pyplot(fig)
+
+# --- 3. AŞAMA: SOYUT ---
+st.header("3. Adım: Soyut Kural (Matematik Sembolü)")
+
+if pay1 > pay2:
+    sembol = ">"
+    mesaj = f"Çünkü {pay1} parça, {pay2} parçadan daha fazladır!"
+elif pay1 < pay2:
+    sembol = "<"
+    mesaj = f"Çünkü {pay2} parça, {pay1} parçadan daha fazladır!"
+else:
+    sembol = "="
+    mesaj = "İki kesir de birbirine eşittir."
+
+st.success(f"### Sonuç: $\\frac{{{pay1}}}{{{payda}}}$ {sembol} $\\frac{{{pay2}}}{{{payda}}}$")
+st.write(mesaj)
